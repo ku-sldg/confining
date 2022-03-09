@@ -2,7 +2,6 @@
 
 Require Import Relations. 
 
-
 (* Section used here so that we can create section-local declarations that can be reused elsewhere. 
 
 Here, everything takes place within the measurement system *)
@@ -18,22 +17,18 @@ Section Measurement_System.
 
 *)
 
-
 (* this is our set of objects *)
 Inductive object : Type :=
 | rtm : object
-| a1 : object 
-| vc : object
-| sys : object
-| ker : object
-| context : object.
+| o1 : object 
+| o2 : object
+| o3 : object. 
 
 Hint Constructors object. 
 
 (* this definition is simply saying there is a relation among objects. We have not defined the realtion yet. *)
 Definition M' : Type := relation object.
 Definition C' : Type := relation object. 
-
 
 (* you cannot put relations inside a record in coq. 
 
@@ -42,46 +37,41 @@ Record MS : Set := mkMS
  { obj : object
  }. 
 
-
-(* M is the measurement relation 
-   C is the context relation *)
-Inductive M' : object -> object -> Prop := 
-    | m_rtm : forall o1 o2: object, o2 <> rtm -> M' o1 o2.  
-
-Check M'. (* : object -> object -> Prop *)
-Check M' : relation object. 
-
-
-
-(* https://softwarefoundations.cis.upenn.edu/lf-current/Rel.html according to software foundations, this should work. *)
-
 (* Definition transitive {X: Type} (R: relation X) :=
   forall a b c : X, (R a b) -> (R b c) -> (R a c). *)
 
 Check relation. (*: Type -> Type*) 
 Check transitive. (* : forall A : Type, relation A -> Prop*)
 
-Theorem trans_C : transitive object M.
-Proof.
-    unfold transitive. intros.
-    induction x; destruct z.  
-Abort. 
-
-(* a subset type for all the object that does not include the RTM
-
-I think here we are showing this is a acyclic *)
+(* TO SAY M IS ROOTED*)
+(* a subset type for all the object that does not include the RTM *)
 Definition notRTM := {o : object | o <> rtm}.
+
+Inductive M1 : object -> object -> Prop := 
+    | rtm_o : M1 rtm o1
+    | o1_o2 : M1 o1 o2
+    | o2_o3 : M1 o2 o3. 
+    
+Check M1. (* : object -> object -> Prop *)
+Check M1 : relation object. 
+
 
 Check clos_trans. (*: forall A : Type, relation A -> A -> A -> Prop *)
 (* the transitive closure needs a variable and a relation. *)
 
+Definition M_plus := clos_trans _ M1.
 
-Definition M_plus := clos_trans _ M.
+Lemma o_antisym : forall o, ~(M1 o o).
+Proof.
+    unfold not. intros. induction o; inversion H.
+Qed.    
 
-(* why can't we prove this? shouldn't we be able to prove this?? Or at least get it to type check. *)
-(* Theorem trans_clos': clos_trans _ M. *)
-
-
+(* I am stuck on this proof. If you destruct H' then it goes away. I think the rewrite should work. I'm not sure why it doesnt.  *)
+Example o_tran : transitive _ M1.
+Proof.
+    unfold transitive. intros. induction x; destruct y; destruct z; try apply H; try apply H0. 
+    + assert ( H': forall o, ~(M1 o o)). { apply o_antisym. } specialize H' with rtm. unfold not in H'. (* rewrite <- H'. *) 
+Abort. 
 
 (* the rtm must be distinugished *)
 Theorem rtm_dist: rtm <> vc /\ rtm <> sys /\ rtm <> ker.
