@@ -1,14 +1,3 @@
-(* define record triple that defines O M and C so each is defined seperately but you can put them together 
-
-could also use module types like we did for the Galois connections 
-
-coq Object system 
-
-TO DO: 
-- branch the confining repo 
-- then during 1-1 decide how to merge them *)
-
-
 (* This document is a Coq model of Paul Rowe's paper titled "Confining Adversary Actions via Measurements" *)
 
 Require Import Relations. 
@@ -41,19 +30,28 @@ Inductive object : Type :=
 
 Hint Constructors object. 
 
+(* this definition is simply saying there is a relation among objects. We have not defined the realtion yet. *)
+Definition M' : Type := relation object.
+Definition C' : Type := relation object. 
+
+
+(* you cannot put relations inside a record in coq. 
+
+So, so far the record will only hold objects and not the relation until we have it. *)
+Record MS : Set := mkMS 
+ { obj : object
+ }. 
+
+
 (* M is the measurement relation 
    C is the context relation *)
-Inductive M : object -> object -> Prop := 
-    | m_rtm : forall o1 o2: object, o2 <> rtm -> M o1 o2.  
+Inductive M' : object -> object -> Prop := 
+    | m_rtm : forall o1 o2: object, o2 <> rtm -> M' o1 o2.  
 
-Definition M' : relation object.
-Check M'. (*: Type*)
+Check M'. (* : object -> object -> Prop *)
+Check M' : relation object. 
 
-Check le. (* nat -> nat -> Prop*)
-Check le : relation nat.  
 
-Check M. (* : object -> object -> Prop *)
-Check M : relation object. 
 
 (* https://softwarefoundations.cis.upenn.edu/lf-current/Rel.html according to software foundations, this should work. *)
 
