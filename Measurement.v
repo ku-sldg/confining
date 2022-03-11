@@ -27,6 +27,8 @@ Require Import Partial_Order.
 
 (* Set Implicit Arguments. *)
 
+Section Measurement.
+
 (** Object type is either RTM or an indexed object *)
 
 (** Simple definition of objects that measure and get measured.  The
@@ -92,7 +94,7 @@ Inductive m : M :=
 | o1o2 : m o1 o2
 | o1o3 : m o1 o3.
 
-Hint Constructors m.
+Hint Constructors m : core.
 
 (** Simple examples over `m` to exercise the structure *)
 
@@ -122,7 +124,7 @@ Proof.
   inversion H1.
 Qed.
 
-Hint Resolve asymmetric_m.
+Hint Resolve asymmetric_m : core.
 
 (** Prove that RTM is not measured *)
 
@@ -132,7 +134,7 @@ Proof.
   inversion H; subst.
 Qed.
 
-Hint Resolve no_measures_rtm_m.
+Hint Resolve no_measures_rtm_m : core.
 
 (** [M] is well-formed if [RTM] is not measured by anything, nothing
  measures itself, and measurement is asymmetric. *)
@@ -193,14 +195,10 @@ Definition complement {A} (R : relation A) : relation A :=
 
 Example reflexive_compliment : reflexive Obj (complement (clos_trans Obj m)).
 Proof.
-  unfolds. unfold complement. intros.
-  induction x.
-  Case "m+ RTM RTM".
-  inverts H.
-  SCase "m RTM RTM".
-  apply no_measures_rtm_m in H0. congruence.
-  SCase "clos_trans".
-  inverts H0. inverts H1. apply no_measures_rtm_m in H0. congruence.
+  unfold reflexive. unfold complement. intros.
+  induction x. inversion H.
+  inversion H; subst. inversion H0.
+  inversion H; subst. inversion H2.
 Abort.
 
 Example is_well_formed_m_plus : is_well_formed_M_plus m'.
