@@ -1,0 +1,145 @@
+\documentclass[Runningheads]{llncs}
+%
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usepackage{verbatim}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bussproofs}
+%\usepackage{graphicx}
+\usepackage[all]{xy}
+%\usepackage{array}
+%\usepackage{enumitem}
+%\usepackage{cite}
+\usepackage{natbib}
+%\usepackage{amsthm}
+% If you use the hyperref package, please uncomment the following line
+% to display URLs in blue roman font according to Springer's eBook style:
+% \renewcommand\UrlFont{\color{blue}\rmfamily}
+%\usepackage[breaklinks=true]{hyperref}
+\usepackage{breakcites}
+%\renewcommand\UrlFont{\color{blue}\rmfamily}
+
+% The following package makes prettier tables.  We're all about the bling!
+\usepackage{booktabs}
+
+% The units package provides nice, non-stacked fractions and better spacing
+% for units.
+\usepackage{units}
+
+% The fancyvrb package lets us customize the formatting of verbatim
+% environments.  We use a slightly smaller font.
+\usepackage{fancyvrb}
+\fvset{fontsize=\normalsize}
+
+% Small sections of multiple columns
+\usepackage{multicol}
+
+\newcommand\squash{\parskip=0pt\itemsep=0pt}
+\newcommand\tfil[1]{\lfloor #1\rfloor}
+\newcommand\lift[1]{\lceil #1\rceil}
+\newcommand\hash[1]{\##1}
+\newcommand\M{\mathcal{M}}
+\newcommand\Mp{\mathcal{M'}}
+\newcommand\sigtype[2]{\Sigma_{x:#1}#2(x)}
+
+\spnewtheorem{axiom}{Axiom}{\bfseries}{\itshape}
+
+\usepackage{semantic}
+
+\begin{document}
+%
+\title{A Theory of Measurement\thanks{This work is supported in part by
+    National Security Agency Science of Security Lablet program,
+    contract \#XXXX}} 
+%
+%\titlerunning{Abbreviated paper title}
+% If the paper title is too long for the running head, you can set
+% an abbreviated paper title here
+%
+\author{Anna Fritz \and Perry Alexander}
+%
+\authorrunning{A. Fritz et al.}
+% First names are abbreviated in the running head.
+% If there are more than two authors, 'et al.' is used.
+%
+\institute{Institute for Information Sciences\\ The
+  University of Kansas \\ Lawrence, KS 66045 \\
+  \email{\{afritzz,palexand\}@ku.edu}}
+%
+\maketitle              % typeset the header of the contribution
+%
+\begin{abstract}
+The abstract should briefly summarize the contents of the paper in
+15--250 words.
+
+\keywords{First keyword  \and Second keyword \and Another keyword.}
+\end{abstract}
+%
+%
+%
+
+\begin{figure}[hbtp]
+  \centering
+  ~
+  \xymatrix{
+    app\ar[r] & \cdot\ar[r] & c\ar[r] & r\ar[r] & \cdot \\
+    OS\ar[r]\ar[u]^{ms} & \cdot\ar[rrr]\ar[u]^{ms} & & & \cdot\ar[u]^{ms} \\
+    BIOS\ar[r]\ar[u]^{ms} & BIOS & & & \\
+    RTM\ar[u]^{ms} & & & & \\
+  }  
+  \caption{Uncaught corruption and repair.}
+\end{figure}
+
+\begin{figure}[hbtp]
+  \centering
+  ~
+  \xymatrix{
+    app\ar[r] & \cdot\ar[r] & c\ar[r] & \cdot\ar[r] & r \\
+    OS\ar[r]\ar[u]^{ms} & \cdot\ar[rr]\ar[u]^{ms} & &
+    \cdot\ar[u]^{ms} & \\
+    BIOS\ar[r]\ar[u]^{ms} & BIOS & & & \\
+    RTM\ar[u]^{ms} & & & & \\
+  }  
+  \caption{Caught corruption and attempted repair}
+\end{figure}
+
+\begin{figure}[hbtp]
+  \centering
+  ~
+  \xymatrix{
+    app\ar[r] & \cdot\ar[r] & c\ar[r] & sys\ar[r] & \cdot \\
+    OS\ar[r]\ar[u]^{ms} & \cdot\ar[rrr]\ar[u]^{ms} & & & \cdot\ar[u]^{ms} \\
+    \cdot\ar[u]^{ms} & \\
+    BIOS\ar[r]\ar[u]^{ms} & BIOS & & & \\
+    RTM\ar[u]^{ms} & & & & \\
+  }  
+  \caption{Uncaught corruption prior to system event}
+\end{figure}
+
+\begin{figure}[hbtp]
+  \centering
+  ~
+  \xymatrix{
+    app\ar[r] & \cdot\ar[r] & c\ar[r] & \cdot\ar[r] & sys \\
+    OS\ar[r]\ar[u]^{ms} & \cdot\ar[rr]\ar[u]^{ms} & &
+    \cdot\ar[u]^{ms} & \\
+    BIOS\ar[r]\ar[u]^{ms} & BIOS & & & \\
+    RTM\ar[u]^{ms} & & & & \\
+  }  
+  \caption{Caught corruption prior to system event}
+\end{figure}
+
+% 
+% 
+% ---- Bibliography ----
+%
+% BibTeX users should specify bibliography style 'splncs04'.
+% References will then be sorted and formatted in the correct style.
+%
+%\bibliographystyle{splncs04}
+\bibliographystyle{splncsnat}
+\bibliography{sldg}
+%
+\end{document}
