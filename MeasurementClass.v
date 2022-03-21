@@ -1,4 +1,3 @@
-
 (*
   https://softwarefoundations.cis.upenn.edu/qc-current/Typeclasses.html
 *)
@@ -9,6 +8,10 @@ Require Import Lia.
 Require Import Partial_Order.
 Require Export Pset.
 
+Section MeasurementClass.
+
+Ltac inverts H := inversion H; subst; clear H.
+  
 (** Definition of a well-formed measurement system.  Requires an [Obj] type
  that represents the universe, a measurement relation [m] and a context
  relation [c].  If the measurement system is well-formed:
@@ -56,61 +59,92 @@ Inductive m : relation Obj :=
 Inductive c : relation Obj :=
 | o1o2 : c o2 o1.
 
-(** Define [MeasurementSys] to be an isntance of [Measurement] over [RTM], [m]
-  and [c]. *)
+(** Each of the following produce one proof value for
+ each of the theorem types defined in [Measurement] *)
 
-Instance MeasurementSys: (Measurement RTM m c).
-
-(** Must now prove that all the properties hold for this system.  Coq makes
- this happen automatically. [constructor] breaks up the record into its
- constituent parts.  If a value does not exist for a field, then the prover
- is called to create one. Each of the following produce one proof value for
- each of the theorem types defined in [Measurement]. *)
-
+Lemma distinct_rtm_Obj: forall o o' : Obj, o = RTM -> o' = RTM -> o = o'.
 Proof.
-  constructor.
-  
-  intros. subst. reflexivity.
-  
-  intros. unfold not. intros. inversion H.
-  
-  intros. unfold not. intros H. inversion H; subst; clear H.
-  inversion H1; subst; clear H1.
-  inversion H0; subst; clear H0.
-  inversion H0.
-  inversion H0.
-  
-  intros. unfold not. intros H0.
-  inversion H; subst; clear H.
-  inversion H2.
-  inversion H2.
-  inversion H2.
-  
-  intros. unfold not. intros. inversion H.
+  intros o o'; intros H1 H2; subst; reflexivity.
+Qed.
 
-  intros. unfold not. intros H. inversion H; subst; clear H.
-  inversion H1; subst; clear H1.
-  inversion H0; subst; clear H0.
+Hint Resolve distinct_rtm_Obj : core.
 
-  intros o o'.
-  intros H.
-  unfold not. intros H0.
-  inversion H; subst; clear H.
-  inversion H1.
+Lemma irreflexive_m_Obj:  forall o : Obj, ~ m o o.
+Proof.
+  intros. unfold not. intros. inverts H.
+Qed.
 
-  intros.
+Hint Resolve irreflexive_m_Obj : core.
+
+Lemma asymmetric_m_Obj: forall o p, ~((m o p) /\ (m p o)).
+  intros. unfold not. intros H.
+  inverts H;
+    inverts H1;
+    inverts H0;
+    inverts H0;
+    inverts H0.
+Qed.
+
+Hint Resolve asymmetric_m_Obj : core.
+
+Lemma no_measures_rtm_m_Obj: forall o o': Obj, (m o o') -> o' <> RTM.
+Proof.
+  intros o o'; unfold not. intros H H1;
+  inverts H;
+  inverts H2.
+Qed.
+
+Hint Resolve no_measures_rtm_m_Obj : core.
+
+Lemma irreflexive_c_Obj: forall o:Obj, ~(c o o).
+Proof.
+  intros o; unfold not; intros H;
+  inverts H.
+Qed.
+
+Hint Resolve irreflexive_c_Obj : core.
+
+Lemma asymmetric_c_Obj: forall o p:Obj, ~((c o p) /\ (c p o)).
+Proof.
+  intros o o'; unfold not; intros H.
+  inverts H.
+  inverts H0.
+  inverts H1.
+Qed.
+  
+Hint Resolve asymmetric_c_Obj : core.
+
+Lemma no_depends_rtm_c_Obj: forall o o': Obj, (c o o') -> o <> RTM.
+Proof.
+  intros o o'; intros H. unfold not. intros.
+  inverts H0. inverts H.
+Qed.
+
+Hint Resolve no_depends_rtm_c_Obj : core.
+
+Lemma coverage_Obj: forall o:Obj, o=RTM \/ exists o':Obj, m o' o.
+Proof.
+  intros o;
   induction o;
   try (left; reflexivity);
   try (right; eexists; constructor).
 Qed.
 
-(** Check the type of [distinct_rtm] as an example *)
+Hint Resolve coverage_Obj : core.
 
-Check MeasurementSys.(distinct_rtm).
+(** Define [MeasurementSys] to be an isntance of [Measurement] over [RTM], [m]
+  and [c]. *)
 
-(** Check the type of [no_depends_rtm_c] as an example *)
+Instance MeasurementSys: (Measurement RTM m c).
+(** Must now prove that all the properties hold for this system.  Coq makes
+ this happen automatically. [constructor] breaks up the record into its
+ constituent parts.  If a value does not exist for a field, then the prover
+ is called to create one. All the proof fields are defined previously and
+ installed as [auto] hints.  Thus the proofs are just calls to [eauto].*)
 
-Check MeasurementSys.(no_depends_rtm_c).
+Proof.
+  constructor; eauto.
+Qed.
 
 (** Define an event system that allows specifying instances of
  attestation startup, measurement, corruption, and repair. Parameterized
@@ -146,24 +180,17 @@ Hint Constructors trc : core.
 
 Instance ordered_e : (preset eq (trc e)).
 Proof.
-  constructor.
-  reflexivity.
+  constructor;
 
   (* Shockingly, the transitive reflexive closure of e is in fact transitive
      and reflexive. *)
 
-  intros x y; intros H; subst; reflexivity.
-
-  intros x y z; intros H1 H2; subst; reflexivity.
+  try (intros; subst; auto).
   
-  intros x y; intros H; subst; apply TrcRefl.
-
-  intros x y z; intros H1 H2.
-  induction H1. assumption.
-  eapply TrcFront. apply H. apply IHtrc. apply H2.
+  induction H. assumption. eauto.
 Qed.
 
-(* An event system is an event ordering defined by [delta] and sequences
+(* An event system is an event ordering defined by [(trc leq0)] and sequences
  of events defined by [traces]. *)
 Class eventSystem(Event:Type) := {
     leq0: (relation Event);
@@ -212,3 +239,5 @@ Proof.
   inversion H0.
   inversion H0; subst. inversion H1; subst. inversion H2. inversion H1. inversion H2.
 Qed.
+
+End MeasurementClass.
