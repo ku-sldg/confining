@@ -12,7 +12,8 @@ Require Import Coq.Classes.RelationClasses.
 Print LoadPath.
 (* Add LoadPath "/Users/annarosefritz/Documents/EECS_research/GitHubRepos/confining/v2". *)
 
-From v2 Require Import MS.
+From v2 Require Import MS_noContext.
+Print MS.
 
 Section event1. 
 
@@ -52,30 +53,44 @@ intros A R x y. intros H1 z H2. induction H1.
 + eapply TrcFront. apply H. apply IHtrc. apply H2.
 Qed. 
 
+(* this is just the transitive closure *)
+Inductive tc {A} (R : A -> A -> Prop) : A -> A -> Prop :=
+| TcStep : forall x y , R x y -> tc R x y
+| TcFront : forall x y z, R x y -> tc R y z -> tc R x z.
+
+(* May need to prove transitivity later on... I'm not sure. *)
+Theorem tc_trans : forall {A} (R : A -> A -> Prop) x y, tc R x y
+-> forall z, tc R y z
+-> tc R x z.
+Proof.  
+(* the key to this proof is induction on the hypothesis *)
+intros A R x y. intros H1. induction H1; intros.
++ eapply TcFront. apply H. apply H0.
++ eapply TcFront. apply H. apply IHtc. apply H0.
+Qed. 
+
+
 (* Transitive-reflexive closure is so common that it deserves a shorthand notation! *)
 Set Warnings "-notation-overridden". (* <-- needed while we play with defining one
 * of the book's notations ourselves locally *)
-Notation "R ^*" := (trc R) (at level 0).
+Notation "R ^**" := (trc R) (at level 0).
+Notation "R ^*" := (tc R) (at level 0).
 
 (* (ms o1 o2) is in the transitive reflexive closure of the start event. *)
 Example measure_o2 : E1^* (att_start) (ms o1 o2).
 Proof.
-eapply TrcFront. 
+eapply TcFront. 
 + apply start.
-+ eapply TrcFront.
-++ apply mo1_o2.
-++ apply TrcRefl.
++ eapply TcStep. apply mo1_o2.
 Qed.
 
 Example measure_o3 : E1^* (att_start) (ms o2 o3).
 Proof.
-eapply TrcFront.
+eapply TcFront.
 + apply start.
-+ eapply TrcFront.
++ eapply TcFront.
 ++ apply mo1_o2.
-++ eapply TrcFront.
-+++ apply mo2_o3.
-+++ apply TrcRefl.   
+++ eapply TcStep. apply mo2_o3.    
 Qed.   
 
 Check E1^*. 
@@ -90,7 +105,7 @@ unfold Reflexive. induction x.
 Abort.
 
 (* A preorder is reflexive and transitive. Proving this as a prerec to the partial order. *)
-Instance E'' : PreOrder E1^*.
+Instance E'' : PreOrder E1^**.
 Proof.
 constructor. 
 + unfold Reflexive. intros. apply TrcRefl.
@@ -106,18 +121,10 @@ Class PartialOrder' {A} (R: relation A) := {
     anti_sym :> Antisymmetric _ eq R ;
     trans :> Transitive R 
     }.
-    
-Theorem E1_antisym : Antisymmetric _ eq E1 ^*.
-Proof.
-    unfold Antisymmetric. intros x y. intros h1 h2. 
-    (* somehow we need to apply TrcFront to 
-    (E1) ^* x y -> (E1) ^* y x 
-    so that we get the property
-    R x y *)
-    eapply TrcFront in h1. try exact h2. Abort. 
 
-    
-Instance E : PartialOrder' E1^*.
+
+
+Instance E : PartialOrder' E1^**.
 Proof.
     constructor.
     (* proving reflexivity is easy ... *)  
@@ -127,12 +134,55 @@ Proof.
     ** inversion H.
     *** reflexivity.
     *** subst. inversion H1.  Abort. 
+    (* more difficult... maybe impossible. At this point, we realize is must be a strict partial order. *)
 
+Lemma E_trans : Transitive E1^*.
+Proof.
+    Abort.
     
-    
-(**)
-    
+Class StrictPartialOrder {A} (R: relation A) := {
+    arefl :> Irreflexive R ; 
+    asym :> Asymmetric R ; 
+    strans :> Transitive R 
+}.
+
+Check MS.
+Check E1.  
+
+Lemma m_irr : forall x, E1 x x -> False.
+Proof.
+    intros. Check m_irreflexive. destruct E1.  
+
+Instance E_strict : StrictPartialOrder E1^*.
+Proof. 
+    constructor. 
+    + cbv in *. intros x h. absurd (E1 x x). assert m_irreflexive.  apply m_irreflexive.   eapply TcFront in h. inversion h; subst. apply H. inversion H.    Search "irreflexive". inversion h; subst. apply m_irreflexive in h. .  
+
+Class StrictPartialOrder' {A} (R: relation A) := {
+    (* arefl :> Irreflexive R ; 
+    asym :> Asymmetric R ; *)
+    strans' :> Transitive R 
+}.
+        
+Instance E_strict' : StrictPartialOrder' E1. 
+Proof.
+    constructor. unfold Transitive. intros x y z H. induction H.
+    + intros. (* no where to go, need transitive closure *) Abort.    
+
+            
+Instance E_strict' : StrictPartialOrder' E1^*. 
+Proof.
+    constructor.
+    + unfold Transitive. intros x y z. intros h1. induction h1; intros.
+    ++ eapply TcFront.
+    +++ apply H.
+    +++ apply H0.
+    ++ eapply TcFront. 
+    +++ apply H. 
+    +++ apply IHh1. apply H0.
+Qed. 
+            
 End event1. 
-    
+            
 (* *)
-    
+                
