@@ -4,7 +4,7 @@ The measurement systems are defined in and imported from MS.v.
 
 This is a continuation of our attempt at Coq model of Paul Rowe's paper titled "Confining Adversary Actions via Measurements" *)
 
-(* CURRENT PROBLEMS: Due to the event system definition, it is difficult (if not impossible) to prove that the event system is partially ordered. Specifically, the antisymmetric property *)
+(* CURRENT PROBLEMS: Due to the event system definition, it is difficult  to prove that the event system is a strict partial order.  *)
 
 Require Import Relations. 
 Require Import Coq.Classes.RelationClasses.
@@ -141,8 +141,8 @@ Proof.
     Abort.
     
 Class StrictPartialOrder {A} (R: relation A) := {
-    arefl :> Irreflexive R ; 
     asym :> Asymmetric R ; 
+    arefl :> Irreflexive R ; 
     strans :> Transitive R 
 }.
 
@@ -151,12 +151,21 @@ Check E1.
 
 Lemma m_irr : forall x, E1 x x -> False.
 Proof.
-    intros. Check m_irreflexive. destruct E1.  
+    intros. inversion H.
+Qed.
+
+Check Asymmetric. 
+
+Theorem E_asym : forall x y, ~ (E1 x y /\ E1 y x).
+Proof. 
+    intros. cbv in *. intros. inversion H. inversion H0. inversion H1. subst. inversion H4. subst. inversion H5. subst. inversion H5. subst. inversion H1. subst. inversion H1.
+Qed.                  
 
 Instance E_strict : StrictPartialOrder E1^*.
 Proof. 
     constructor. 
-    + cbv in *. intros x h. absurd (E1 x x). assert m_irreflexive.  apply m_irreflexive.   eapply TcFront in h. inversion h; subst. apply H. inversion H.    Search "irreflexive". inversion h; subst. apply m_irreflexive in h. .  
+    + induction 1.
+    ++ intros. inversion H0; subst. inversion H; inversion H1; subst; try inversion H4; try inversion H5. absurd ((E1) ^* y x -> (E1) ^* y0 x). unfold not. apply TcFront.  auto.       
 
 Class StrictPartialOrder' {A} (R: relation A) := {
     (* arefl :> Irreflexive R ; 
