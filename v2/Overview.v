@@ -5,6 +5,7 @@ Proofs and definitions adapted from
 
 Require Import Relations. 
 Require Import Coq.Classes.RelationClasses.
+Require Import Coq.Program.Equality.
 
 (* Our work starts when Rowe introduces the measurement system *)
 (* Definition 1 is a measurement system (MS). 
@@ -95,13 +96,43 @@ Proof.
     destruct HA; subst; inversion HB.
 Qed. 
 
+(* define these Ltac commands to help in strict order proof *)
+Ltac inv H := inversion H; subst.
+Ltac invc H := inv H; clear H.
+
 (* Rowe says the event system is a partial order. We believe it is a Strict order. That is, it is irreflexive and transitive. We use the transtive closure of the event system to make this work. *)
+Instance tcE_irr : Irreflexive (tc E1).
+Proof using.
+  unfold Irreflexive, Reflexive, complement.
+  intros e H.
+  invc H.
+  - eapply E_irr. eassumption.
+  - (*0*)invc H0; (*1*)invc H1; (*2*)invc H.
+    + invc H0; invc H.
+      invc H1; invc H.
+    + invc H0; invc H.
+Qed.
+
 Instance E_strict : StrictOrder (tc E1).
 Proof.
     constructor.
     (* Irreflexive *)
-    + unfold Irreflexive. unfold Reflexive. intros. unfold complement. intros. inversion H.
-    ++ inversion H0.
-    ++  
-    (* Transitivie *) 
-    +
+     + cbv in *. intros e H; invc H.   
+     ++ invc H0.
+(*1*)++ invc H0.
+(*2*)+++ invc H1.
+(*3*)++++ invc H.
+(*3*)++++ invc H0.
+(*4*)+++++ invc H. invc H1. 
+(*4*)+++++ invc H. invc H1. invc H2. invc H. invc H.   
+(*2*)+++ invc H1.
+(*3*)++++ invc H.
+(*3*)++++ invc H0.
+(*4*)+++++ invc H. invc H1.
+(*4*)+++++ invc H. invc H1.
+(*3*)+++ invc H1.
+(*4*)+++++ invc H. 
+(*4*)+++++ invc H.
+    (* Transitive *)
+    + cbv in *. intros x y z H. generalize dependent z. eapply tc_trans. eapply H.
+Qed. 
